@@ -1,62 +1,73 @@
-#include <stdio.h> 
-#include <stdlib.h> // makra 
+#include <stdio.h>  // wiadomo po co
+#include <stdlib.h> // qsort
 #include <string.h> // strstr
 
-#define BUFSIZE 8192
-#define MAXLINES 1000
+#define BUFSIZE 8192    // zakładamy, że linie będą krótsze niż 8kB
 
-int main(int argc, char**argv){
-	if(argc < 2){
-		printf("prosze wprowadzic nazwe pliku oraz sekwencje znakow do odszukania");
+int main ( int argc, char **argv ) {
+    int ile_linii;
+    char buf[BUFSIZE];
+
+    int opt = argc > 1? atoi(argv[1]): 0;
+
+    FILE *in= argc > 2 ? fopen( argv[2], "r" ) : stdin;
+
+
+    char **str = malloc(argc * sizeof str);
+    int s = 0;
+    int i;
+    for(i =  3; i < argc; i++)
+    {
+        str[s] = argv[i];
+        s++;
+    }
+
+	if( str == NULL ) {
+		fprintf( stderr, "%s: błąd: proszę podac napis do wyszukiwania\n", argv[0] );
 		return EXIT_FAILURE;
 	}
 
-	//otwieranie pliku
-	FILE *in = argc > 1 ? fopen( argv[1], "r") : stdin;
-	if( in == NULL){
-		fprintf( stderr," %s: blad odczytu pliku %s\n", argv[0], argv[1]);
+	if( in == NULL ) {
+		fprintf( stderr, "%s: błąd: nie mogę czytać pliku %s\n", argv[0], argv[2] );
 		return EXIT_FAILURE;
 	}
 
-	//wpisanie pliku do tablicy kopia
-	char *kopia[MAXLINES];
-  	int ile_linii;
-	char buf[BUFSIZE];
+	ile_linii= 0;
+    if(opt == 1)
+    {
+        while( fgets( buf, BUFSIZE, in ) != NULL ) {
+            ile_linii++;
+            for(int i = 0; i < s; i++)
+            {
+                
+                if( strstr( buf, str[i] ) != NULL ){
+                    printf("Numer linii: %d\n", ile_linii - 1);
+		    printf("%s", buf);
+                }
 
-	int ile_inii= 0;
-	while( fgets( buf, BUFSIZE, in ) != NULL ) {
-		if( ile_linii < MAXLINES ) {
-			if( (kopia[ile_linii]= malloc( (strlen(buf)+1) * sizeof( char ) )) == NULL ) {
-				fprintf( stderr, "%s: błąd: zbyt wiele danych (brak pamięci)\n", argv[0] );
-				return EXIT_FAILURE;
-			}
-			strcpy( kopia[ile_linii], buf );
-			ile_linii++;
-		} else {
-			fprintf( stderr, "%s: błąd: zbyt wiele linii wejścia\n", argv[0] );
-			return EXIT_FAILURE;
-		}
-	}
-
-	/*zasadnicza czesc do przerobki
-	*zapisac argumenty do tablic(tablicy tablic?)
-	*kolejno wywolywac je do porownania z lines
-	*jesli pattern wystapi, wpisac linie do dst
-	nested loop will do!*/
-
-	char *ptr;
-	char *pattern = argv[2];
-	int i;
-	char *ptr_tab[ile_linii];
-	for(i = 0; i < ile_linii; i++){
-		ptr = strstr(kopia[i] ,pattern);
-		ptr_tab[i] = ptr;
-	}
-
-	int j; 
-	for( j=0; j < ile_linii; j++){
-		if(ptr != NULL)
-			printf("%s", kopia[(int)ptr]);
+            }
         }
+    }
+
+    if(opt == 0)
+    {
+        while( fgets( buf, BUFSIZE, in ) != NULL ) {
+            int stat = 0;
+	    ile_linii++;
+            for(int i = 0; i < s; i++)
+            {
+
+                if( strstr( buf, str[i] ) != NULL ){
+                    stat++;
+                }
+		if(stat == s){
+			printf("numer linii: %d\n", ile_linii);
+			printf("%s", buf);
+
+                }
+           }
+   	 }
+    }
+	
 	return EXIT_SUCCESS;
- }
+}
